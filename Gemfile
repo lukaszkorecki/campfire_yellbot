@@ -1,5 +1,4 @@
 source :rubygems
 gem "json"
-gem "broach"
-gem "twitter-stream"
+gem "tinder"
 gem "meme_generator"
