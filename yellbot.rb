@@ -15,10 +15,11 @@ def reload! room, message
   return if message.nil? or not message.is_a? String
   unless message.match(/^RELOAD!/).nil?
     begin
+      `curl #{CONFIG['replies_url']} > replies.yml`
       $replies = YAML.load_file('replies.yml')
-      room.speak "RELOADED TEH $replies file"
+      s = "RELOADED TEH $replies file"
     rescue
-      room.speak "CANT RELOAD, file BORKED"
+      s = "CANT RELOAD, file BORKED"
     end
   end
 end
@@ -48,15 +49,24 @@ def connect domain, token, room_name
 end
 
 
-cf_room = connect CONFIG['domain'], CONFIG['token'], CONFIG['room_name']
 
-cf_room.join
+def join_and_listen _room
+  room = _room
+  room.join
 
-cf_room.listen do |message|
-  puts '-' * 80
+  begin
+    room.listen do |message|
+      puts '-' * 80
 
-  puts message
+      puts message
 
-  reply(cf_room, message['body']) unless message.nil? or message['body'].nil?
+      reply(room, message['body']) unless message.nil? or message['body'].nil?
 
+    end
+  rescue => e
+    join_and_listen _room
+  end
 end
+
+cf_room = connect CONFIG['domain'], CONFIG['token'], CONFIG['room_name']
+join_and_listen cf_room
