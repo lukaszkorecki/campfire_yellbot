@@ -1,25 +1,14 @@
 require 'rubygems'
+require 'bundler'
+
+Bundler.require
 
 require 'yaml'
-require 'broach'
-require 'twitter/json_stream'
-
-require 'broach_monkeypatch'
 require 'yellbot_meme_generator'
 
 CONFIG = YAML.load_file('config.yml')
 $replies = YAML.load_file('replies.yml')
 @meme_generator = YellbotMemeGenerator.new
-begin
-  score = YAML::load_file('SCORE.yaml')
-rescue
-  score = {
-    'started' => Time.now,
-    'wtf' => 0,
-    'facepalm' => 0
-  }
-end
-SCORE = score
 
 def reload! room, message
   return if message.nil? or not message.is_a? String
@@ -33,15 +22,6 @@ def reload! room, message
   end
 end
 
-def update_score  room, message
-  return if message.nil? or not message.is_a? String
-  wat = message.match /^(wtf|facepalm)/i
-  unless wat.nil? or wat.to_s.nil?
-    SCORE[wat.to_s.downcase] += 1
-    room.speak "Since #{SCORE['started']} -> WTFs: #{SCORE['wtf']}, facepalms: #{SCORE['facepalm']}"
-  end
-  File.open('SCORE.yaml','w') { |f| YAML::dump(SCORE, f) }
-end
 
 def reply(room, message)
   $replies.each_pair do |name, reply|
@@ -60,61 +40,22 @@ def respond(room, reply)
   end
 end
 
-options = {
-  :path => "/room/#{CONFIG['room_id']}/live.json",
-  :host => 'streaming.campfirenow.com',
-  :auth => "#{CONFIG['token']}:x"
-}
+def connect domain, token, room_name
+  campfire = ::Tinder::Campfire.new domain, :token => token
 
-Broach.settings = {
-  'account' => CONFIG['account'],
-  'token'   => CONFIG['token'],
-  'use_ssl' => true
-}
-room = Broach::Room.find CONFIG['room_id']
-
-room.join
-
-EventMachine::run do
-  stream = Twitter::JSONStream.connect(options)
-
-  stream.each_item do |item|
-    puts item
-    begin
-      obj = JSON.parse(item)
-      body = obj['body']
-      user_id = obj['user_id']
-    rescue => e
-      puts "ERROR, #{e}"
-      body = ""
-    end
-
-    begin
-      if user_id != CONFIG['bot_user_id']
-        reply room,  body
-        update_score room, body
-        reload! room, body
-      end
-    rescue => e
-      puts "ERROR, ERRROR"
-      y e
-    end
-  end
-
-  stream.on_error do |message|
-    begin
-      puts message
-      puts "ERROR:#{message.inspect}"
-    rescue => e
-      puts "ERROR, ERRROR"
-      y e
-    end
-
-  end
-
-  stream.on_max_reconnects do |timeout, retries|
-    puts "Tried #{retries} times to connect."
-    exit
-  end
+  campfire.find_room_by_name room_name
 end
 
+
+cf_room = connect CONFIG['domain'], CONFIG['token'], CONFIG['room_name']
+
+cf_room.join
+
+cf_room.listen do |message|
+  puts '-' * 80
+
+  puts message
+
+  reply(cf_room, message['body']) unless message.nil? or message['body'].nil?
+
+end
