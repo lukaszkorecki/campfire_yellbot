@@ -19,13 +19,6 @@ Edit the config files (duh).
 
 Configure your replies in `replies.yml` using this format:
 
-    match:
-      message: your message
-      image: url to an image [optional]
-
-for example:
-
-
     rage:
       regex: '^rage$'
       message:
