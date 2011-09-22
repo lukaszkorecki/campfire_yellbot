@@ -6,6 +6,7 @@ Is your campfire room not cluttered enough?  Use yellbot to annoy all your co-wo
 1. clone it
 2. (you need rubygems and bundler)
 3. `bundle install`
+3. `ruby yellbot.rb`
 4. ??????
 5. profit
 
@@ -21,3 +22,11 @@ Configure your replies in `replies.yml` using this format:
     match:
       message: your message
       image: url to an image [optional]
+
+for example:
+
+
+    rage:
+      regex: '^rage$'
+      message:
+        - FFFFFFUUUUUUU
