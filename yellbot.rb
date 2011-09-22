@@ -30,7 +30,7 @@ def reply(room, message)
       respond(room, reply)
     end
   end
-  if @meme_generator.meme? message
+  if false # @meme_generator.meme? message
     respond(room, {'message' => [@meme_generator.reply(message)]})
   end
 end
