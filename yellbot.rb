@@ -11,9 +11,9 @@ CONFIG = YAML.load_file('config.yml')
 $replies = YAML.load_file('replies.yml')
 @meme_generator = YellbotMemeGenerator.new
 
-def reload! room, message
-  return if message.nil? or not message.is_a? String
-  unless message.match(/^RELOAD!/).nil?
+class Commands
+  def self.reload arg=nil
+    s = ''
     begin
       `curl #{CONFIG['replies_url']} > replies.yml`
       $replies = YAML.load_file('replies.yml')
@@ -21,18 +21,33 @@ def reload! room, message
     rescue
       s = "CANT RELOAD, file BORKED"
     end
+    s
+  end
+
+
+  def self.test arg=[]
+    arg.join ' - '
   end
 end
 
 
+def make_it_a_message sth
+  reply = sth.is_a?( Array) ? sth : [ sth ]
+  { 'message' => reply}
+end
+
 def reply(room, message)
+  puts message
   $replies.each_pair do |name, reply|
     if Regexp.new(reply['regex'], Regexp::IGNORECASE).match(message)
       respond(room, reply)
     end
   end
-  if false # @meme_generator.meme? message
-    respond(room, {'message' => [@meme_generator.reply(message)]})
+
+  if message =~ /^!!y/
+    pref, command, *args = message.split(' ')
+    resp = Commands.send command.to_sym, args
+    respond(room, make_it_a_message(resp))
   end
 end
 
@@ -51,19 +66,19 @@ end
 
 
 def join_and_listen _room
+  puts 'YELLBOT JOINS THE ROOM'
   room = _room
   room.join
 
   begin
     room.listen do |message|
       puts '-' * 80
-
-      puts message
-
       reply(room, message['body']) unless message.nil? or message['body'].nil?
 
     end
   rescue => e
+    puts 'YELLBOT CRASHEDQ!!!!!!'
+    puts e.to_yaml
     join_and_listen _room
   end
 end
