@@ -6,7 +6,8 @@ Is your campfire room not cluttered enough?  Use yellbot to annoy all your co-wo
 1. clone it
 2. (you need rubygems and bundler)
 3. `bundle install`
-3. `ruby yellbot.rb`
+4. configure stuff
+3. `ruby bot.rb`
 4. ??????
 5. profit
 
