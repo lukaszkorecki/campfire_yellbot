@@ -1,15 +1,35 @@
 class Yellbot
-  def initialize config, replies, command
+  def initialize command
+    @command = command
+    @predefined_commands = [ 'RELOAD', 'REPLIES', 'COMMANDS'].map { |c| "yellbot #{c}"}
+  end
+
+  def load_config
+    config = YAML.load_file('config.yml')
+    replies = YAML.load_file('replies.yml')
+
     @domain = config['domain']
     @room_name = config['room_name']
     @token = config['token']
-    @command = command
 
     @replies = replies
   end
 
+
   def reply(message)
     puts message
+    case message
+    when 'yellbot RELOAD'
+      load_config
+      respond make_it_a_message('configs reloaded')
+    when 'yellbot REPLIES'
+      paste @replies.map {|name, conf| conf['regex'] }.to_yaml
+    when 'yellbot COMMANDS'
+      b = @command.methods - Object.new.methods
+      b.reject { |m| m == 'method_missing'}
+      paste  (@predefined_commands + b).map {|s| '> ' + s }.to_yaml
+    end
+
     @replies.each_pair do |name, reply|
       if Regexp.new(reply['regex'], Regexp::IGNORECASE).match(message)
         puts 'WE MATCHED A REPLY'
@@ -17,7 +37,7 @@ class Yellbot
       end
     end
 
-    if message =~ /^yellbot\s/
+    if message =~ /^yellbot\s/ and not @predefined_commands.include? message
       puts 'WE GOT A COMMAND'
       pref, command, *args = message.split(' ')
       resp = @command.send command.to_sym, args
@@ -28,6 +48,10 @@ class Yellbot
   def make_it_a_message sth
     reply = sth.is_a?( Array) ? sth : [ sth ]
     { 'message' => reply}
+  end
+
+  def paste str
+    @room.paste str
   end
 
   def respond( reply)

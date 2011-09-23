@@ -12,9 +12,6 @@ require 'lib/helper'
 
 
 
-config = YAML.load_file('config.yml')
-replies = YAML.load_file('replies.yml')
-
 unless ARGV.empty?
   ARGV.each do |file|
     puts "loading additional commands file: #{file}"
@@ -22,8 +19,7 @@ unless ARGV.empty?
   end
 end
 
-command_interpreter = Command.new
 
-bot = Yellbot.new  config, replies, command_interpreter
-
+bot = Yellbot.new(Command.new)
+bot.load_config
 bot.connect!.join_and_listen
