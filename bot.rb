@@ -6,9 +6,9 @@ Bundler.require
 require 'ext/http_patch_for_linux'
 require 'yaml'
 
-require 'ext/yellbot'
-require 'ext/command'
-require 'ext/helper'
+require 'lib/yellbot'
+require 'lib/command'
+require 'lib/helper'
 
 
 
