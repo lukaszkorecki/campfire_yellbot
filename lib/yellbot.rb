@@ -1,4 +1,3 @@
-
 class Yellbot
   def initialize config, replies
     @domain = config['domain']
@@ -31,10 +30,8 @@ class Yellbot
   end
 
   def respond( reply)
-    puts "Responding with #{reply}"
-    reply['message'].each do |message|
-      @room.speak(message)
-    end
+    puts "Responding with: \n\t #{reply.inspect}"
+    reply['message'].each {  |message| @room.speak(message) }
   end
 
   def connect!
@@ -63,4 +60,3 @@ class Yellbot
   end
 
 end
-
