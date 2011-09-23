@@ -16,7 +16,7 @@ class Yellbot
       end
     end
 
-    if message =~ /^!!y/
+    if message =~ /^yellbot\s/
       puts 'WE GOT A COMMAND'
       pref, command, *args = message.split(' ')
       resp = Command.send command.to_sym, args
