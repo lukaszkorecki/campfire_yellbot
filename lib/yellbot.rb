@@ -1,8 +1,9 @@
 class Yellbot
-  def initialize config, replies
+  def initialize config, replies, command
     @domain = config['domain']
     @room_name = config['room_name']
     @token = config['token']
+    @command = command
 
     @replies = replies
   end
@@ -19,7 +20,7 @@ class Yellbot
     if message =~ /^yellbot\s/
       puts 'WE GOT A COMMAND'
       pref, command, *args = message.split(' ')
-      resp = Command.send command.to_sym, args
+      resp = @command.send command.to_sym, args
       respond( make_it_a_message(resp))
     end
   end

@@ -1,8 +1,8 @@
 class Command
-  def self.method_missing *args
+  def method_missing *args
     "no such command #{args.inspect}"
   end
-  def self.reload  args=nil
+  def reload  args=nil
     s = ''
     begin
       body = Helper.get_body CONFIG['replies_url']
@@ -16,7 +16,7 @@ class Command
   end
 
 
-  def self.test args=[]
+  def test args=[]
     args.join ' - '
   end
 end
