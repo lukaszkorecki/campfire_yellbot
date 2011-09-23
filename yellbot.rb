@@ -1,69 +1,66 @@
-require 'rubygems'
-require 'bundler'
 
-Bundler.require
+class Yellbot
+  def initialize config, replies
+    @domain = config['domain']
+    @room_name = config['room_name']
+    @token = config['token']
 
-require 'http_patch_for_linux'
-require 'yaml'
-require 'yellbot_meme_generator'
+    @replies = replies
+  end
 
-require 'command'
-require 'helper'
+  def reply(message)
+    puts message
+    @replies.each_pair do |name, reply|
+      if Regexp.new(reply['regex'], Regexp::IGNORECASE).match(message)
+        puts 'WE MATCHED A REPLY'
+        respond( reply)
+      end
+    end
 
-
-CONFIG = YAML.load_file('config.yml')
-$replies = YAML.load_file('replies.yml')
-
-def reply(room, message)
-  puts message
-  $replies.each_pair do |name, reply|
-    if Regexp.new(reply['regex'], Regexp::IGNORECASE).match(message)
-      puts 'WE MATCHED A REPLY'
-      respond(room, reply)
+    if message =~ /^!!y/
+      puts 'WE GOT A COMMAND'
+      pref, command, *args = message.split(' ')
+      resp = Command.send command.to_sym, args
+      respond( make_it_a_message(resp))
     end
   end
 
-  if message =~ /^!!y/
-    puts 'WE GOT A COMMAND'
-    pref, command, *args = message.split(' ')
-    resp = Command.send command.to_sym, args
-    respond(room, Helper.make_it_a_message(resp))
+  def make_it_a_message sth
+    reply = sth.is_a?( Array) ? sth : [ sth ]
+    { 'message' => reply}
   end
-end
 
-def respond(room, reply)
-  puts "Responding with #{reply}"
-  reply['message'].each do |message|
-    room.speak(message)
-  end
-end
-
-def connect domain, token, room_name
-  campfire = ::Tinder::Campfire.new domain, :token => token
-
-  campfire.find_room_by_name room_name
-end
-
-
-
-def join_and_listen _room
-  puts 'YELLBOT JOINS THE ROOM'
-  room = _room
-  room.join
-
-  room.speak 'Yellbot Active!'
-
-  begin
-    room.listen do |message|
-      puts '-' * 80
-      reply(room, message['body']) unless message.nil? or message['body'].nil?
+  def respond( reply)
+    puts "Responding with #{reply}"
+    reply['message'].each do |message|
+      @room.speak(message)
     end
-  rescue => e
-    puts 'YELLBOT CRASHEDQ!!!!!!'
-    puts e.to_yaml
-    join_and_listen _room
   end
+
+  def connect!
+    @campfire = ::Tinder::Campfire.new @domain, :token => @token
+    @room =  @campfire.find_room_by_name @room_name
+    self
+  end
+
+
+  def join_and_listen
+    puts 'YELLBOT JOINS THE ROOM'
+    @room.join
+
+    @room.speak 'Yellbot Active!'
+
+    begin
+      @room.listen do |message|
+        puts '-' * 80
+        reply( message['body']) unless message.nil? or message['body'].nil?
+      end
+    rescue => e
+      puts 'YELLBOT CRASHEDQ!!!!!!'
+      puts e.to_yaml
+      join_and_listen
+    end
+  end
+
 end
 
-cf_room = connect CONFIG['domain'], CONFIG['token'], CONFIG['room_name']
-join_and_listen cf_room
