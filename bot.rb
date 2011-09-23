@@ -3,12 +3,12 @@ require 'bundler'
 
 Bundler.require
 
-require 'http_patch_for_linux'
+require 'ext/http_patch_for_linux'
 require 'yaml'
 
-require 'yellbot'
-require 'command'
-require 'helper'
+require 'ext/yellbot'
+require 'ext/command'
+require 'ext/helper'
 
 
 
