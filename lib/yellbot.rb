@@ -1,18 +1,20 @@
+require 'yaml'
 class Yellbot
   def initialize command
     @command = command
     @predefined_commands = [ 'RELOAD', 'REPLIES', 'COMMANDS'].map { |c| "yellbot #{c}"}
+
+    @me = nil
   end
 
   def load_config
     config = YAML.load_file('config.yml')
-    replies = YAML.load_file('replies.yml')
 
     @domain = config['domain']
     @room_name = config['room_name']
     @token = config['token']
 
-    @replies = replies
+    @replies = YAML::load_file( 'replies.yml')
   end
 
 
@@ -25,8 +27,7 @@ class Yellbot
     when 'yellbot REPLIES'
       paste @replies.map {|name, conf| conf['regex'] }.to_yaml
     when 'yellbot COMMANDS'
-      b = @command.methods - Object.new.methods
-      b.reject { |m| m == 'method_missing'}
+      b = (@command.methods - Object.new.methods).reject! { |m| m == 'method_missing'}
       paste  (@predefined_commands + b).map {|s| '> ' + s }.to_yaml
     end
 
@@ -62,11 +63,12 @@ class Yellbot
   def connect!
     @campfire = ::Tinder::Campfire.new @domain, :token => @token
     @room =  @campfire.find_room_by_name @room_name
+    @me ||= @campfire.me
     self
   end
 
 
-  def join_and_listen init=true
+  def join_and_listen init=false
     puts 'YELLBOT JOINS THE ROOM'
     @room.join
 
@@ -75,7 +77,10 @@ class Yellbot
     begin
       @room.listen do |message|
         puts '-' * 80
-        reply( message['body']) unless message.nil? or message['body'].nil?
+        puts "USER: #{message.inspect} vs #{@me.inspect}"
+        if message['user'] and message['user']['id'] != @me['id'] and not message.nil? and not message['body'].nil?
+          reply( message['body'])
+        end
       end
     rescue => e
       puts 'YELLBOT CRASHEDQ!!!!!!'
