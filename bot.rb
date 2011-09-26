@@ -15,7 +15,7 @@ require 'lib/helper'
 unless ARGV.empty?
   ARGV.each do |file|
     puts "loading additional commands file: #{file}"
-    load file
+    load File.expand_path file
   end
 end
 
