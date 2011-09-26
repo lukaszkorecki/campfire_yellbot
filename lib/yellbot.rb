@@ -66,11 +66,11 @@ class Yellbot
   end
 
 
-  def join_and_listen
+  def join_and_listen init=true
     puts 'YELLBOT JOINS THE ROOM'
     @room.join
 
-    @room.speak 'Yellbot Active!'
+    @room.speak 'Yellbot Active!' if  init
 
     begin
       @room.listen do |message|
@@ -80,7 +80,7 @@ class Yellbot
     rescue => e
       puts 'YELLBOT CRASHEDQ!!!!!!'
       puts e.to_yaml
-      join_and_listen
+      join_and_listen(false)
     end
   end
 
